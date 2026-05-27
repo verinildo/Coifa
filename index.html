@@ -367,7 +367,11 @@ Devem ser adotados filtros metálicos removíveis, caixa de gordura e inspeção
               <strong id="resAreaCoifa">-</strong>
             </div>
             <div class="result-box">
-              <small>Vazão de exaustão</small>
+              <small>Perímetro da coifa</small>
+              <strong id="resPerimetro">-</strong>
+            </div>
+            <div class="result-box">
+              <small>Vazão adotada</small>
               <strong id="resVazao">-</strong>
             </div>
             <div class="result-box">
@@ -450,11 +454,15 @@ Devem ser adotados filtros metálicos removíveis, caixa de gordura e inspeção
       const comprimentoCoifa = numero('comprimentoCoifa');
       const areaCoifaManual = numero('areaCoifaManual');
       const areaCoifa = areaCoifaManual > 0 ? areaCoifaManual : larguraCoifa * comprimentoCoifa;
+      const perimetroCoifa = 2 * (larguraCoifa + comprimentoCoifa);
       const velocidade = numero('velocidade');
 
       const reposicaoMinPct = numero('reposicaoMin');
       const reposicaoMaxPct = numero('reposicaoMax');
-      const vazao = areaCoifa * velocidade * 3600;
+      const vazao1 = areaCoifa * velocidade * 3600;
+      const vazao2 = perimetroCoifa * velocidade * 3600;
+      const vazao = Math.max(vazao1, vazao2);
+      const metodoAdotado = vazao1 >= vazao2 ? 'Método 1 - Área da coifa' : 'Método 2 - Perímetro da coifa';
       const reposicaoMin = vazao * reposicaoMinPct / 100;
       const reposicaoMax = vazao * reposicaoMaxPct / 100;
 
@@ -463,6 +471,7 @@ Devem ser adotados filtros metálicos removíveis, caixa de gordura e inspeção
 
       document.getElementById('resVolume').textContent = `${formatarNumero(volume, 2)} m³`;
       document.getElementById('resAreaCoifa').textContent = `${formatarNumero(areaCoifa, 2)} m²`;
+      document.getElementById('resPerimetro').textContent = `${formatarNumero(perimetroCoifa, 2)} m`;
       document.getElementById('resVazao').textContent = `${formatarInteiro(vazao)} m³/h`;
       document.getElementById('resReposicao').textContent = `${formatarInteiro(reposicaoMin)} a ${formatarInteiro(reposicaoMax)} m³/h`;
 
@@ -491,17 +500,29 @@ Devem ser adotados filtros metálicos removíveis, caixa de gordura e inspeção
         <p><strong>Tipo:</strong> ${tipoCoifa}</p>
         <p><strong>Dimensões reais:</strong> ${formatarNumero(larguraCoifa, 2)} m × ${formatarNumero(comprimentoCoifa, 2)} m</p>
         <p><strong>Área útil da coifa:</strong> ${formatarNumero(areaCoifa, 2)} m²</p>
+        <p><strong>Perímetro da coifa:</strong> ${formatarNumero(perimetroCoifa, 2)} m</p>
         <p><strong>Altura da coifa em relação à superfície de cocção:</strong> ${formatarNumero(alturaCoifa, 2)} m</p>
 
         <h3>4. Critérios de Cálculo</h3>
         <p>Para coifas sobre equipamentos geradores de calor e gordura, foi adotada velocidade de captação de <strong>${formatarNumero(velocidade, 2)} m/s</strong>.</p>
+        <p>Serão calculadas duas vazões: uma pelo critério da área da coifa e outra pelo critério do perímetro da coifa. Ao final, será adotado o maior valor encontrado.</p>
 
         <h3>5. Cálculo da Vazão de Exaustão</h3>
+        <p><strong>Método 1 - Área da coifa</strong></p>
         <div class="formula">
-          Q = A<sub>coifa</sub> × V<sub>captação</sub> × 3600<br>
-          Q = ${formatarNumero(areaCoifa, 2)} m² × ${formatarNumero(velocidade, 2)} m/s × 3600 s/h<br>
-          Q = ${formatarInteiro(vazao)} m³/h
+          Q<sub>1</sub> = A<sub>coifa</sub> × V<sub>captação</sub> × 3600<br>
+          Q<sub>1</sub> = ${formatarNumero(areaCoifa, 2)} m² × ${formatarNumero(velocidade, 2)} m/s × 3600 s/h<br>
+          Q<sub>1</sub> = ${formatarInteiro(vazao1)} m³/h
         </div>
+
+        <p><strong>Método 2 - Perímetro da coifa</strong></p>
+        <div class="formula">
+          Q<sub>2</sub> = P<sub>coifa</sub> × V<sub>captação</sub> × 3600<br>
+          Q<sub>2</sub> = ${formatarNumero(perimetroCoifa, 2)} m × ${formatarNumero(velocidade, 2)} m/s × 3600 s/h<br>
+          Q<sub>2</sub> = ${formatarInteiro(vazao2)} m³/h
+        </div>
+
+        <p><strong>Vazão adotada:</strong> ${formatarInteiro(vazao)} m³/h, correspondente à maior vazão calculada (${metodoAdotado}).</p>
 
         <h3>6. Ar de Reposição Recomendado</h3>
         <p>Considerando reposição entre <strong>${formatarNumero(reposicaoMinPct, 0)}%</strong> e <strong>${formatarNumero(reposicaoMaxPct, 0)}%</strong> da vazão extraída:</p>
