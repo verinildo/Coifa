@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cálculo de Vazão de Exaustão - Cozinha Profissional</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #64748b;
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --border: #d8e0ea;
+      --soft: #eef7f6;
+      --danger: #b91c1c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: 24px auto 60px;
+    }
+
+    .topbar {
+      background: linear-gradient(135deg, var(--primary), #14b8a6);
+      color: white;
+      padding: 24px;
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(15, 118, 110, 0.20);
+      margin-bottom: 22px;
+    }
+
+    .topbar h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .topbar p { margin: 0; opacity: .95; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      margin-bottom: 18px;
+    }
+
+    .card h2 {
+      font-size: 19px;
+      margin: 0 0 14px;
+      color: var(--primary-dark);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 11px;
+      font-size: 14px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    textarea { min-height: 78px; resize: vertical; }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .results {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .result-box {
+      background: var(--soft);
+      border: 1px solid #b7e3dd;
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .result-box small {
+      display: block;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .result-box strong {
+      display: block;
+      font-size: 21px;
+      color: var(--primary-dark);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--primary);
+      color: white;
+      transition: .2s;
+    }
+
+    button:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    button.secondary { background: #334155; }
+    button.secondary:hover { background: #1e293b; }
+
+    .report {
+      background: white;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 26px;
+    }
+
+    .report h1 {
+      text-align: center;
+      font-size: 21px;
+      margin: 0 0 20px;
+      text-transform: uppercase;
+    }
+
+    .report h3 {
+      margin: 22px 0 8px;
+      color: var(--primary-dark);
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 5px;
+    }
+
+    .report p { margin: 6px 0; }
+    .report ul { margin-top: 6px; }
+    .formula {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      padding: 10px 14px;
+      margin: 10px 0;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+    }
+
+    .signature {
+      margin-top: 46px;
+      text-align: center;
+    }
+
+    .signature .line {
+      width: 320px;
+      border-top: 1px solid #111827;
+      margin: 0 auto 6px;
+    }
+
+    .warning {
+      color: var(--danger);
+      font-weight: 700;
+      font-size: 13px;
+      display: none;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 850px) {
+      .grid { grid-template-columns: 1fr; }
+      .results { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      body { background: white; }
+      .topbar, .input-area, .actions, .warning { display: none !important; }
+      .container { width: 100%; margin: 0; }
+      .grid { display: block; }
+      .report {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+      }
+      @page { size: A4; margin: 16mm; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="topbar">
+      <h1>Cálculo da Vazão de Exaustão para Cozinha Profissional</h1>
+      <p>Memorial automático com base em dados informados pelo usuário.</p>
+    </section>
+
+    <section class="grid">
+      <div class="input-area">
+        <div class="card">
+          <h2>1. Dados do Memorial</h2>
+          <div class="form-grid">
+            <div>
+              <label for="data">Data</label>
+              <input id="data" type="date" value="2025-06-04">
+            </div>
+            <div>
+              <label for="responsavel">Responsável Técnico</label>
+              <input id="responsavel" type="text" value="[Nome do engenheiro]">
+            </div>
+            <div class="full">
+              <label for="local">Local / descrição</label>
+              <input id="local" type="text" value="Pequeno restaurante com preparo de carnes, frituras e cocção contínua">
+            </div>
+            <div class="full">
+              <label for="norma">Norma base</label>
+              <input id="norma" type="text" value="ABNT NBR 14518:2019 – Sistemas de ventilação para cozinhas profissionais">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>2. Informações da Cozinha</h2>
+          <div class="form-grid">
+            <div>
+              <label for="areaCozinha">Área útil da cozinha (m²)</label>
+              <input id="areaCozinha" type="number" step="0.01" value="11.9">
+            </div>
+            <div>
+              <label for="peDireito">Pé-direito (m)</label>
+              <input id="peDireito" type="number" step="0.01" value="2.7">
+            </div>
+            <div>
+              <label for="horas">Funcionamento diário (h)</label>
+              <input id="horas" type="number" step="0.1" value="24">
+            </div>
+            <div>
+              <label for="volumeManual">Volume manual (opcional)</label>
+              <input id="volumeManual" type="number" step="0.01" placeholder="Deixe vazio para calcular">
+              <div class="hint">Se vazio: Volume = área × pé-direito.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>3. Equipamentos e Coifa</h2>
+          <div class="form-grid">
+            <div class="full">
+              <label for="equipamentos">Equipamentos de cocção</label>
+              <textarea id="equipamentos">Caldeira 500L 3x
+Caldeira 300L</textarea>
+            </div>
+            <div>
+              <label for="tipoCoifa">Tipo de coifa</label>
+              <select id="tipoCoifa">
+                <option value="Coifa central (ilha)" selected>Coifa central (ilha)</option>
+                <option value="Coifa de parede">Coifa de parede</option>
+                <option value="Coifa compensada">Coifa compensada</option>
+                <option value="Outro tipo de coifa">Outro tipo de coifa</option>
+              </select>
+            </div>
+            <div>
+              <label for="alturaCoifa">Altura da coifa à cocção (m)</label>
+              <input id="alturaCoifa" type="number" step="0.01" value="0.5">
+            </div>
+            <div>
+              <label for="larguraCoifa">Largura da coifa (m)</label>
+              <input id="larguraCoifa" type="number" step="0.01" value="6.6">
+            </div>
+            <div>
+              <label for="comprimentoCoifa">Comprimento da coifa (m)</label>
+              <input id="comprimentoCoifa" type="number" step="0.01" value="1.8">
+            </div>
+            <div>
+              <label for="areaCoifaManual">Área da coifa manual (opcional)</label>
+              <input id="areaCoifaManual" type="number" step="0.01" placeholder="Deixe vazio para calcular">
+              <div class="hint">Se vazio: Área = largura × comprimento.</div>
+            </div>
+            <div>
+              <label for="velocidade">Velocidade de captação (m/s)</label>
+              <input id="velocidade" type="number" step="0.01" value="0.5">
+              <div class="hint">Referência usual do memorial: 0,5 a 0,7 m/s.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>4. Ar de Reposição</h2>
+          <div class="form-grid">
+            <div>
+              <label for="reposicaoMin">Reposição mínima (%)</label>
+              <input id="reposicaoMin" type="number" step="1" value="70">
+            </div>
+            <div>
+              <label for="reposicaoMax">Reposição máxima (%)</label>
+              <input id="reposicaoMax" type="number" step="1" value="90">
+            </div>
+            <div class="full">
+              <label for="consideracoes">Considerações finais</label>
+              <textarea id="consideracoes">A vazão calculada atende à faixa recomendada para o critério adotado.
+Recomenda-se a instalação de um sistema de reposição de ar com filtragem e distribuição adequada para garantir conforto térmico e pressão neutra.
+Devem ser adotados filtros metálicos removíveis, caixa de gordura e inspeção nos dutos, com acesso para manutenção.</textarea>
+            </div>
+          </div>
+
+          <p id="warning" class="warning">Verifique os valores informados. Todos os campos numéricos principais devem ser maiores que zero.</p>
+
+          <div class="actions">
+            <button onclick="calcular()">Calcular / Atualizar Relatório</button>
+            <button class="secondary" onclick="window.print()">Imprimir / Salvar em PDF</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>Resultados</h2>
+          <div class="results">
+            <div class="result-box">
+              <small>Volume da cozinha</small>
+              <strong id="resVolume">-</strong>
+            </div>
+            <div class="result-box">
+              <small>Área da coifa</small>
+              <strong id="resAreaCoifa">-</strong>
+            </div>
+            <div class="result-box">
+              <small>Vazão de exaustão</small>
+              <strong id="resVazao">-</strong>
+            </div>
+            <div class="result-box">
+              <small>Ar de reposição</small>
+              <strong id="resReposicao">-</strong>
+            </div>
+          </div>
+        </div>
+
+        <article id="relatorio" class="report"></article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ids = [
+      'data', 'responsavel', 'local', 'norma', 'areaCozinha', 'peDireito', 'horas',
+      'volumeManual', 'equipamentos', 'tipoCoifa', 'alturaCoifa', 'larguraCoifa',
+      'comprimentoCoifa', 'areaCoifaManual', 'velocidade', 'reposicaoMin',
+      'reposicaoMax', 'consideracoes'
+    ];
+
+    ids.forEach(id => {
+      document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', calcular);
+      });
+    });
+
+    function numero(id) {
+      const valor = parseFloat(document.getElementById(id).value.replace(',', '.'));
+      return isNaN(valor) ? 0 : valor;
+    }
+
+    function texto(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function moedaData(dataISO) {
+      if (!dataISO) return '';
+      const partes = dataISO.split('-');
+      return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dataISO;
+    }
+
+    function formatarNumero(valor, casas = 2) {
+      return valor.toLocaleString('pt-BR', {
+        minimumFractionDigits: casas,
+        maximumFractionDigits: casas
+      });
+    }
+
+    function formatarInteiro(valor) {
+      return Math.round(valor).toLocaleString('pt-BR');
+    }
+
+    function linhasParaLista(textoBruto) {
+      return textoBruto
+        .split('\n')
+        .map(l => l.trim())
+        .filter(Boolean)
+        .map(l => `<li>${l}</li>`)
+        .join('');
+    }
+
+    function calcular() {
+      const data = texto('data');
+      const responsavel = texto('responsavel') || '[Nome do engenheiro]';
+      const local = texto('local');
+      const norma = texto('norma');
+
+      const areaCozinha = numero('areaCozinha');
+      const peDireito = numero('peDireito');
+      const horas = numero('horas');
+      const volumeManual = numero('volumeManual');
+      const volume = volumeManual > 0 ? volumeManual : areaCozinha * peDireito;
+
+      const tipoCoifa = texto('tipoCoifa');
+      const alturaCoifa = numero('alturaCoifa');
+      const larguraCoifa = numero('larguraCoifa');
+      const comprimentoCoifa = numero('comprimentoCoifa');
+      const areaCoifaManual = numero('areaCoifaManual');
+      const areaCoifa = areaCoifaManual > 0 ? areaCoifaManual : larguraCoifa * comprimentoCoifa;
+      const velocidade = numero('velocidade');
+
+      const reposicaoMinPct = numero('reposicaoMin');
+      const reposicaoMaxPct = numero('reposicaoMax');
+      const vazao = areaCoifa * velocidade * 3600;
+      const reposicaoMin = vazao * reposicaoMinPct / 100;
+      const reposicaoMax = vazao * reposicaoMaxPct / 100;
+
+      const valido = areaCozinha > 0 && peDireito > 0 && areaCoifa > 0 && velocidade > 0 && reposicaoMinPct > 0 && reposicaoMaxPct > 0;
+      document.getElementById('warning').style.display = valido ? 'none' : 'block';
+
+      document.getElementById('resVolume').textContent = `${formatarNumero(volume, 2)} m³`;
+      document.getElementById('resAreaCoifa').textContent = `${formatarNumero(areaCoifa, 2)} m²`;
+      document.getElementById('resVazao').textContent = `${formatarInteiro(vazao)} m³/h`;
+      document.getElementById('resReposicao').textContent = `${formatarInteiro(reposicaoMin)} a ${formatarInteiro(reposicaoMax)} m³/h`;
+
+      const equipamentosLista = linhasParaLista(texto('equipamentos'));
+      const consideracoesLista = linhasParaLista(texto('consideracoes'));
+
+      document.getElementById('relatorio').innerHTML = `
+        <h1>Memorial de Cálculo da Vazão de Exaustão para Cozinha Profissional</h1>
+
+        <p><strong>Data:</strong> ${moedaData(data)}</p>
+        <p><strong>Assunto:</strong> Cálculo da vazão de exaustão para cozinha profissional</p>
+        <p><strong>Responsável Técnico:</strong> ${responsavel}</p>
+        <p><strong>Norma Base:</strong> ${norma}</p>
+        <p><strong>Local:</strong> ${local}</p>
+
+        <h3>1. Informações da Cozinha</h3>
+        <p><strong>Área útil:</strong> ${formatarNumero(areaCozinha, 2)} m²</p>
+        <p><strong>Pé-direito:</strong> ${formatarNumero(peDireito, 2)} m</p>
+        <p><strong>Volume total:</strong> ${formatarNumero(volume, 2)} m³</p>
+        <p><strong>Tempo de funcionamento diário:</strong> ${formatarNumero(horas, 1)} horas</p>
+
+        <h3>2. Equipamentos de Cocção</h3>
+        <ul>${equipamentosLista}</ul>
+
+        <h3>3. Características da Coifa</h3>
+        <p><strong>Tipo:</strong> ${tipoCoifa}</p>
+        <p><strong>Dimensões reais:</strong> ${formatarNumero(larguraCoifa, 2)} m × ${formatarNumero(comprimentoCoifa, 2)} m</p>
+        <p><strong>Área útil da coifa:</strong> ${formatarNumero(areaCoifa, 2)} m²</p>
+        <p><strong>Altura da coifa em relação à superfície de cocção:</strong> ${formatarNumero(alturaCoifa, 2)} m</p>
+
+        <h3>4. Critérios de Cálculo</h3>
+        <p>Para coifas sobre equipamentos geradores de calor e gordura, foi adotada velocidade de captação de <strong>${formatarNumero(velocidade, 2)} m/s</strong>.</p>
+
+        <h3>5. Cálculo da Vazão de Exaustão</h3>
+        <div class="formula">
+          Q = A<sub>coifa</sub> × V<sub>captação</sub> × 3600<br>
+          Q = ${formatarNumero(areaCoifa, 2)} m² × ${formatarNumero(velocidade, 2)} m/s × 3600 s/h<br>
+          Q = ${formatarInteiro(vazao)} m³/h
+        </div>
+
+        <h3>6. Ar de Reposição Recomendado</h3>
+        <p>Considerando reposição entre <strong>${formatarNumero(reposicaoMinPct, 0)}%</strong> e <strong>${formatarNumero(reposicaoMaxPct, 0)}%</strong> da vazão extraída:</p>
+        <p><strong>Reposição recomendada:</strong> ${formatarInteiro(reposicaoMin)} m³/h a ${formatarInteiro(reposicaoMax)} m³/h</p>
+
+        <h3>7. Considerações Finais</h3>
+        <ul>${consideracoesLista}</ul>
+
+        <div class="signature">
+          <div class="line"></div>
+          <p><strong>${responsavel}</strong></p>
+          <p>Responsável Técnico</p>
+        </div>
+      `;
+    }
+
+    document.addEventListener('DOMContentLoaded', calcular);
+  </script>
+</body>
+</html>
